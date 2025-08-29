@@ -20,68 +20,78 @@ async function generateAccessToken() {
 }
 
 exports.createOrder = async () => {
-    const accessToken = await generateAccessToken()
+    try {
+        const accessToken = await generateAccessToken();
 
-    const response = await axios({
-        url: process.env.PAYPAL_BASE_URL + '/v2/checkout/orders',
-        method: 'post',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer ' + accessToken
-        },
-        data: JSON.stringify({
-            intent: 'CAPTURE',
-            purchase_units: [
-                {
-                    items: [
-                        {
-                            name: 'Node.js Complete Course',
-                            description: 'Node.js Complete Course with Express and MongoDB',
-                            quantity: 1,
-                            unit_amount: {
-                                currency_code: 'USD',
-                                value: '100.00'
+        const response = await axios({
+            url: process.env.PAYPAL_BASE_URL + '/v2/checkout/orders',
+            method: 'post',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + accessToken
+            },
+            data: JSON.stringify({
+                intent: 'CAPTURE',
+                purchase_units: [
+                    {
+                        items: [
+                            {
+                                name: 'Node.js Complete Course',
+                                description: 'Node.js Complete Course with Express and MongoDB',
+                                quantity: 1,
+                                unit_amount: {
+                                    currency_code: 'USD',
+                                    value: '100.00'
+                                }
                             }
-                        }
-                    ],
+                        ],
 
-                    amount: {
-                        currency_code: 'USD',
-                        value: '100.00',
-                        breakdown: {
-                            item_total: {
-                                currency_code: 'USD',
-                                value: '100.00'
+                        amount: {
+                            currency_code: 'USD',
+                            value: '100.00',
+                            breakdown: {
+                                item_total: {
+                                    currency_code: 'USD',
+                                    value: '100.00'
+                                }
                             }
                         }
                     }
+                ],
+
+                application_context: {
+                    return_url: process.env.BASE_URL + '/complete-order',
+                    cancel_url: process.env.BASE_URL + '/cancel-order',
+                    shipping_preference: 'NO_SHIPPING',
+                    user_action: 'PAY_NOW',
+                    brand_name: 'ndarehe.io'
                 }
-            ],
+            })
+        });
 
-            application_context: {
-                return_url: process.env.BASE_URL + '/complete-order',
-                cancel_url: process.env.BASE_URL + '/cancel-order',
-                shipping_preference: 'NO_SHIPPING',
-                user_action: 'PAY_NOW',
-                brand_name: 'manfra.io'
-            }
-        })
-    })
-
-    return response.data.links.find(link => link.rel === 'approve').href
+        return response.data.links.find(link => link.rel === 'approve').href;
+    } catch (error) {
+        console.error('PayPal Create Order Error:', error.response?.data || error.message);
+        throw error;
+    }
 }
 
 exports.capturePayment = async (orderId) => {
-    const accessToken = await generateAccessToken()
+    try {
+        const accessToken = await generateAccessToken();
 
-    const response = await axios({
-        url: process.env.PAYPAL_BASE_URL + `/v2/checkout/orders/${orderId}/capture`,
-        method: 'post',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer ' + accessToken
-        }
-    })
+        const response = await axios({
+            url: process.env.PAYPAL_BASE_URL + `/v2/checkout/orders/${orderId}/capture`,
+            method: 'post',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + accessToken
+            }
+        });
 
-    return response.data
+        return response.data;
+    } catch (error) {
+        console.error('PayPal Capture Payment Error:', error.response?.data || error.message);
+        throw error;
+    }
 }

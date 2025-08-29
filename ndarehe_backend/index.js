@@ -21,9 +21,9 @@ app.post('/pay', async(req, res) => {
 })
 
 app.get('/complete-order', async (req, res) => {
+    console.log('Query params:', req.query); 
     try {
-        await paypal.capturePayment(req.query.token)
-
+        await paypal.capturePayment(req.query.token);
         res.send('Course purchased successfully')
     } catch (error) {
         res.send('Error: ' + error)
